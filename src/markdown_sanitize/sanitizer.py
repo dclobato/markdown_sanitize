@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -8,6 +9,7 @@ from markdown_it.token import Token
 
 
 _REFERENCE_DEFINITION_PREFIXES = ("[", "![")
+_BARE_URL_RE = re.compile(r"https?://[^\s<>()]+")
 
 
 @dataclass(frozen=True)
@@ -159,7 +161,7 @@ def _render_inline(tokens: Iterable[Token], removed_features: set[str]) -> str:
         token = tokens[index]
 
         if token.type == "text":
-            pieces.append(token.content)
+            pieces.append(_strip_bare_urls(token.content, removed_features))
             index += 1
             continue
 
@@ -306,3 +308,10 @@ def _contains_reference_definition(md_text: str) -> bool:
 
 def _is_autolink(token: Token) -> bool:
     return token.markup == "autolink" or token.info == "auto"
+
+
+def _strip_bare_urls(text: str, removed_features: set[str]) -> str:
+    stripped = _BARE_URL_RE.sub("", text)
+    if stripped != text:
+        removed_features.add("link")
+    return stripped

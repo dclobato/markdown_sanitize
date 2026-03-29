@@ -38,6 +38,13 @@ def test_autolink_is_removed() -> None:
     assert result.removed_features == ["link"]
 
 
+def test_bare_url_is_removed() -> None:
+    result = sanitize_markdown_statement("Visit https://example.com now.\n")
+    assert result.markdown == "Visit  now.\n"
+    assert result.changed is True
+    assert result.removed_features == ["link"]
+
+
 def test_images_are_removed_completely() -> None:
     result = sanitize_markdown_statement("Before ![alt](https://x/img.png) after\n")
     assert result.markdown == "Before  after\n"
@@ -70,6 +77,14 @@ def test_link_label_text_is_preserved() -> None:
 
 def test_code_blocks_keep_url_like_or_html_like_text() -> None:
     md = "```\n<a href='https://x'>x</a>\nhttps://example.com\n```\n"
+    result = sanitize_markdown_statement(md)
+    assert result.markdown == md
+    assert result.changed is False
+    assert result.removed_features == []
+
+
+def test_inline_code_keeps_bare_url_text() -> None:
+    md = "Use `https://example.com` as a literal.\n"
     result = sanitize_markdown_statement(md)
     assert result.markdown == md
     assert result.changed is False
