@@ -20,11 +20,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Hatch
-        run: python -m pip install --upgrade pip hatch
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Sync dependencies
+        run: uv sync --extra dev
 
       - name: Run tests
-        run: hatch run test
+        run: uv run pytest -q
+
+      - name: Run lint
+        run: uv run ruff check .
+
+      - name: Run typecheck
+        run: uv run mypy src
 
       - name: Build package
-        run: hatch build
+        run: uv build
