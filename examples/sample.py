@@ -37,7 +37,20 @@ print("<div>HTML-looking text also stays in code</div>")
     print("\n" + "=" * 60 + "\n")
 
     print(f"Changed: {result.changed}")
+    print(f"Reformatted: {result.reformatted}")
     print(f"Removed features: {result.removed_features}")
+    print("\n" + "=" * 60 + "\n")
+
+    reformatted_only = "\n# Reformatted Example\n\n\nBody line\n"
+    reformatted_result = sanitize_markdown_statement(reformatted_only)
+
+    print("Reformatted-only input:")
+    print(repr(reformatted_only))
+    print("Reformatted-only output:")
+    print(repr(reformatted_result.markdown))
+    print(f"Changed: {reformatted_result.changed}")
+    print(f"Reformatted: {reformatted_result.reformatted}")
+    print(f"Removed features: {reformatted_result.removed_features}")
 
 
 if __name__ == "__main__":

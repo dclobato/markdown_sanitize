@@ -2,6 +2,12 @@
 
 `markdown_sanitize` is a Python package for sanitizing Markdown statements before storage and later rendering.
 
+## Breaking Change in 2.0.0
+
+Version `2.0.0` adds the `reformatted: bool` field to `SanitizedMarkdownResult`.
+
+If your code instantiates `SanitizedMarkdownResult` directly, unpacks it, or depends on the previous public result shape, update it to handle the new field.
+
 It keeps a safe Markdown subset and removes features that should not survive in problem statements, including:
 
 - inline links
@@ -25,7 +31,7 @@ pip install markdown_sanitize
 For local development with `uv`:
 
 ```bash
-uv sync --group dev
+uv sync --extra dev
 ```
 
 ## What It Preserves
@@ -65,6 +71,7 @@ result = sanitize_markdown_statement(raw_markdown)
 
 print(result.markdown)
 print(result.changed)
+print(result.reformatted)
 print(result.removed_features)
 ```
 
@@ -84,6 +91,7 @@ And:
 
 ```text
 True
+False
 ['html', 'image', 'link']
 ```
 
@@ -98,14 +106,22 @@ from dataclasses import dataclass
 class SanitizedMarkdownResult:
     markdown: str
     changed: bool
+    reformatted: bool
     removed_features: list[str]
 ```
 
 Fields:
 
 - `markdown`: sanitized Markdown ready to store
-- `changed`: `True` when content was removed or normalized
+- `changed`: `True` when the output Markdown differs textually from the input
+- `reformatted`: `True` when the sanitizer only normalized formatting or whitespace, without removing disallowed features
 - `removed_features`: predictable categories such as `link`, `image`, and `html`
+
+Typical interpretations:
+
+- `changed=False`, `reformatted=False`, `removed_features=[]`: input already matched the sanitized form
+- `changed=True`, `reformatted=True`, `removed_features=[]`: only formatting changed
+- `changed=True`, `reformatted=False`, `removed_features!=[]`: disallowed content was removed
 
 ## Example Script
 
@@ -122,7 +138,7 @@ uv run python examples/sample.py
 Install development dependencies:
 
 ```bash
-uv sync --group dev
+uv sync --extra dev
 ```
 
 Run the checks:

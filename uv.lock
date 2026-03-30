@@ -131,7 +131,7 @@ wheels = [
 
 [[package]]
 name = "markdown-sanitize"
-version = "1.0.1"
+version = "2.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "markdown-it-py" },

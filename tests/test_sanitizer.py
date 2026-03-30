@@ -6,6 +6,7 @@ def test_preserves_basic_formatting() -> None:
     result = sanitize_markdown_statement(md)
     assert result.markdown == "# Title\n\nPlain **bold** and *italic*.\n"
     assert result.changed is False
+    assert result.reformatted is False
     assert result.removed_features == []
 
 
@@ -22,12 +23,23 @@ def test_preserves_lists_blockquotes_and_code_blocks() -> None:
     result = sanitize_markdown_statement(md)
     assert result.markdown == md
     assert result.changed is False
+    assert result.reformatted is False
+
+
+def test_preserves_horizontal_rule_after_heading() -> None:
+    md = "# A+B\n---\n\nVocê deve receber dois número inteiros e apresentar a soma deles\n"
+    result = sanitize_markdown_statement(md)
+    assert result.markdown == md
+    assert result.changed is False
+    assert result.reformatted is False
+    assert result.removed_features == []
 
 
 def test_inline_link_becomes_visible_text() -> None:
     result = sanitize_markdown_statement("See [docs](https://example.com) now.\n")
     assert result.markdown == "See docs now.\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["link"]
 
 
@@ -35,6 +47,7 @@ def test_autolink_is_removed() -> None:
     result = sanitize_markdown_statement("Visit <https://example.com>.\n")
     assert result.markdown == "Visit .\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["link"]
 
 
@@ -42,6 +55,7 @@ def test_bare_url_is_removed() -> None:
     result = sanitize_markdown_statement("Visit https://example.com now.\n")
     assert result.markdown == "Visit  now.\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["link"]
 
 
@@ -49,6 +63,7 @@ def test_images_are_removed_completely() -> None:
     result = sanitize_markdown_statement("Before ![alt](https://x/img.png) after\n")
     assert result.markdown == "Before  after\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["image"]
 
 
@@ -57,6 +72,7 @@ def test_reference_links_and_definitions_are_removed() -> None:
     result = sanitize_markdown_statement(md)
     assert result.markdown == "Read guide.\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["link"]
 
 
@@ -65,6 +81,7 @@ def test_raw_html_is_removed() -> None:
     result = sanitize_markdown_statement(md)
     assert result.markdown == "A link here.\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["html"]
 
 
@@ -72,6 +89,7 @@ def test_link_label_text_is_preserved() -> None:
     result = sanitize_markdown_statement("[important section](#section)\n")
     assert result.markdown == "important section\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["link"]
 
 
@@ -80,6 +98,7 @@ def test_code_blocks_keep_url_like_or_html_like_text() -> None:
     result = sanitize_markdown_statement(md)
     assert result.markdown == md
     assert result.changed is False
+    assert result.reformatted is False
     assert result.removed_features == []
 
 
@@ -88,6 +107,7 @@ def test_inline_code_keeps_bare_url_text() -> None:
     result = sanitize_markdown_statement(md)
     assert result.markdown == md
     assert result.changed is False
+    assert result.reformatted is False
     assert result.removed_features == []
 
 
@@ -95,6 +115,7 @@ def test_local_anchors_are_removed_but_text_remains() -> None:
     result = sanitize_markdown_statement("Go to [#secao](#secao)\n")
     assert result.markdown == "Go to #secao\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["link"]
 
 
@@ -103,6 +124,7 @@ def test_output_is_stable_and_collapses_extra_blank_lines() -> None:
     result = sanitize_markdown_statement(md)
     assert result.markdown == "Line\n\ndoc\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["html", "link"]
 
 
@@ -110,4 +132,14 @@ def test_changed_is_true_when_markup_is_removed() -> None:
     result = sanitize_markdown_statement("<img src='https://x'>\n")
     assert result.markdown == "\n"
     assert result.changed is True
+    assert result.reformatted is False
     assert result.removed_features == ["html"]
+
+
+def test_reformatted_is_true_when_only_whitespace_changes() -> None:
+    md = "\n# Title\n\n\nBody\n"
+    result = sanitize_markdown_statement(md)
+    assert result.markdown == "# Title\n\nBody\n"
+    assert result.changed is True
+    assert result.reformatted is True
+    assert result.removed_features == []

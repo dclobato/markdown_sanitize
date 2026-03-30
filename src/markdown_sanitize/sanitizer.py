@@ -16,6 +16,7 @@ _BARE_URL_RE = re.compile(r"https?://[^\s<>()]+")
 class SanitizedMarkdownResult:
     markdown: str
     changed: bool
+    reformatted: bool
     removed_features: list[str]
 
 
@@ -29,19 +30,24 @@ def sanitize_markdown_statement(md_text: str) -> SanitizedMarkdownResult:
     index = 0
     while index < len(tokens):
         rendered, consumed = _render_block(tokens, index, removed_features)
+        if _needs_tight_heading_spacing(tokens, index) and rendered.endswith("\n\n"):
+            rendered = rendered[:-1]
         if rendered:
             pieces.append(rendered)
         index += consumed
 
     markdown = _normalize_markdown("".join(pieces))
+    changed = markdown != md_text
+    reformatted = changed and not removed_features
 
     if _contains_reference_definition(md_text):
         removed_features.add("link")
+        reformatted = changed and not removed_features
 
-    changed = markdown != _normalize_markdown(md_text)
     return SanitizedMarkdownResult(
         markdown=markdown,
         changed=changed,
+        reformatted=reformatted,
         removed_features=sorted(removed_features),
     )
 
@@ -146,6 +152,8 @@ def _render_blocks(tokens: list[Token], removed_features: set[str]) -> str:
     index = 0
     while index < len(tokens):
         rendered, consumed = _render_block(tokens, index, removed_features)
+        if _needs_tight_heading_spacing(tokens, index) and rendered.endswith("\n\n"):
+            rendered = rendered[:-1]
         if rendered:
             pieces.append(rendered)
         index += consumed
@@ -315,3 +323,12 @@ def _strip_bare_urls(text: str, removed_features: set[str]) -> str:
     if stripped != text:
         removed_features.add("link")
     return stripped
+
+
+def _needs_tight_heading_spacing(tokens: list[Token], index: int) -> bool:
+    if tokens[index].type != "heading_open":
+        return False
+    next_index = index + (_find_matching_close(tokens, index) - index + 1)
+    if next_index >= len(tokens):
+        return False
+    return tokens[next_index].type == "hr"

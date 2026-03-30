@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "markdown_sanitize"
-version = "1.0.2"
+version = "2.0.0"
 description = "Sanitize Markdown statements for safe storage and later rendering."
 readme = "README.md"
 license = { text = "MIT" }
