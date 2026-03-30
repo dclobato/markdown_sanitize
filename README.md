@@ -125,7 +125,7 @@ Typical interpretations:
 
 ## Example Script
 
-A runnable example is available at [`examples/sample.py`](/home/dclobato/markdown_cleanup/examples/sample.py).
+A runnable example is available at [`examples/sample.py`](examples/sample.py).
 
 Run it locally with:
 
